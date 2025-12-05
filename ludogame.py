@@ -159,8 +159,7 @@ def play():
         print(a.moves)
         if a.moves:
             print(a.turn)
-            #i = int(input("choose number of move: "))
-            i = 0
+            i = int(input("choose number of move: "))
             if (a.moves[i] == 'start'):
                 a.start()
             else:
@@ -173,7 +172,6 @@ def play():
                     a.board.update_piece_position((0,0), removed)
                     a.remove(removed)
                     if a.check_win():
-                        print(a.winner)
                         break
                 else: a.ids[i].move(a.moves[i])
         a.moves =[]
@@ -185,8 +183,7 @@ def play():
         print(a.moves)
         if a.moves:
             print(a.turn)
-           # i = int(input("choose number of move: "))
-            i = 0
+            i = int(input("choose number of move: "))
             if (a.moves[i] == 'start'):
                 a.start()
             else:
@@ -199,7 +196,6 @@ def play():
                     a.board.update_piece_position((7,7), removed)
                     a.remove(removed)
                     if a.check_win():
-                        print(a.winner)
                         break
                 else: a.ids[i].position = a.moves[i]
         
@@ -207,6 +203,7 @@ def play():
         a.ids =[]
         a.turn = 'B'
     a.board.display()
+    print(a.winner + ' wins!')
 
 
 
