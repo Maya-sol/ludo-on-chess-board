@@ -1,6 +1,7 @@
 from ludoboard import *
 from ludopieces import Piece
 from ludoconst import *
+from bot import *
 
 class Ludo:
     def __init__(self):
@@ -9,7 +10,7 @@ class Ludo:
         self.turn = 'B'
         self.winner = None
         self.moves = []
-        self.ids = []
+        self.ids= []
 
     def check_start (self):
         if(self.turn == 'B' and self.dice == 6):
@@ -150,16 +151,17 @@ class Ludo:
                     if i.position == position:
                         self.board.second.remove(i)
             
-def play():
+def play_with_bot():
     a = Ludo()
+    bot = Bot(a.board)
     while True:
         a.board.display()
         print(a.roll())
         a.get_valid_moves()
         print(a.moves)
         if a.moves:
-            print(a.turn)
-            i = int(input("choose number of move: "))
+            print('Blue\'s turn')
+            i = int(input("choose your move: "))
             if (a.moves[i] == 'start'):
                 a.start()
             else:
@@ -182,8 +184,65 @@ def play():
         a.get_valid_moves()
         print(a.moves)
         if a.moves:
-            print(a.turn)
-            i = int(input("choose number of move: "))
+            print('Red\'s turn')
+            i = bot.choose_move(a.moves)
+            if (a.moves[i] == 'start'):
+                a.start()
+            else:
+                removed = a.board.get_piece_at(a.moves[i][0], a.moves[i][1])
+                a.board.update_piece_position(a.ids[i].position, a.moves[i])
+                if removed is not None:
+                    removed.move((-1 , -1))
+                if a.check_arrive(a.moves[i]):
+                    removed = a.arrive()
+                    a.board.update_piece_position((7,7), removed)
+                    a.remove(removed)
+                    if a.check_win():
+                        break
+                else: a.ids[i].position = a.moves[i]
+        
+        a.moves =[]
+        a.ids =[]
+        a.turn = 'B'
+    a.board.display()
+    print(a.winner + ' wins!')
+
+
+def play():
+    a = Ludo()
+    bot = Bot(a.board)
+    while True:
+        a.board.display()
+        print(a.roll())
+        a.get_valid_moves()
+        print(a.moves)
+        if a.moves:
+            print('Blue\'s turn')
+            i = int(input("choose your move: "))
+            if (a.moves[i] == 'start'):
+                a.start()
+            else:
+                removed = a.board.get_piece_at(a.moves[i][0], a.moves[i][1])
+                if removed is not None:
+                    removed.move((-1 , -1))
+                a.board.update_piece_position(a.ids[i].position, a.moves[i])
+                if a.check_arrive(a.moves[i]):
+                    removed = a.arrive()
+                    a.board.update_piece_position((0,0), removed)
+                    a.remove(removed)
+                    if a.check_win():
+                        break
+                else: a.ids[i].move(a.moves[i])
+        a.moves =[]
+        a.ids =[]
+        a.board.display()
+        a.turn = 'R'
+        print(a.roll())
+        a.get_valid_moves()
+        print(a.moves)
+        if a.moves:
+            print('Red\'s turn')
+            i = int(input("choose your move: "))
             if (a.moves[i] == 'start'):
                 a.start()
             else:
@@ -208,6 +267,10 @@ def play():
 
 
 if __name__ == "__main__":
-    play()
+    i = int(input("if you want to play with a friend write 0, else to play with our bot write 1: "))
+    if i == 1:
+        play_with_bot()
+    elif i == 0:
+        play()
                 
 
