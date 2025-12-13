@@ -13,17 +13,16 @@ class Ludo:
         self.ids= []
 
     def check_start (self):
-        if(self.turn == 'B' and self.dice == 6):
-            p = self.board.get_piece_at(0,0)
-            if p is None or p.symbol != 'B':
-                for i in self.board.first:
-                    if(i.position == (-1,-1)):
-                        self.ids.append(i)
-                        return True
-        elif (self.turn == 'R' and self.dice == 6):
-            p = self.board.get_piece_at(7,7)
-            if p is None or p.symbol != 'R':
-                for i in self.board.second:
+        turn = self.turn
+        if(self.dice == 6):
+            if turn == 'B':
+                p = self.board.get_piece_at(0,0)
+                pieces = self.board.first
+            else:
+                p = self.board.get_piece_at(7,7)
+                pieces = self.board.second
+            if p is None or p.symbol != turn:
+                for i in pieces:
                     if(i.position == (-1,-1)):
                         self.ids.append(i)
                         return True
@@ -68,33 +67,28 @@ class Ludo:
         if (self.check_start()):
             self.moves.append('start')
         if (self.turn == 'B'):
-            for i in self.board.first:
-                m = self.check_road(i.position)
-                if self.board.is_valid_position(m[0],m[1]):
-                    self.moves.append(m)
-                    self.ids. append(i)
-        elif (self.turn == 'R'):
-            for i in self.board.second:
-                m = self.check_road(i.position)
-                if self.board.is_valid_position(m[0],m[1]):
-                    self.moves.append(m)
-                    self.ids. append(i)
+            pieces = self.board.first
+        else:
+            pieces  = self.board.second
+        for i in pieces:
+            m = self.check_road(i.position)
+            if self.board.is_valid_position(m[0],m[1]):
+                self.moves.append(m)
+                self.ids. append(i)
+        
     
     def start(self):
         if self.turn == 'B':
-            p = self.board.get_piece_at(0,0)
-            if p is not None and p.symbol == 'R': 
-                p.move((-1,-1))
-            self.ids[0].position = (0,0)
-            self.board.grid[0][0] = 'B'
-            return
-        if self.turn == 'R':
-            p = self.board.get_piece_at(7,7)
-            if p is not None and p.symbol == 'B': 
-                p.move((-1,-1))
-            self.ids[0].position = (7,7)
-            self.board.grid[7][7] = 'R'
-            return
+            st = (0,0)
+        else:
+            st = (7,7)
+
+        p = self.board.get_piece_at(st[0], st[1])
+        if p is not None and p.symbol != self.turn: 
+            p.move((-1,-1))
+        self.ids[0].position = st
+        self.board.grid[st[0]][st[1]] = self.turn
+        return
         
 
                 
@@ -150,8 +144,14 @@ class Ludo:
                 for i in self.board.second:
                     if i.position == position:
                         self.board.second.remove(i)
+
+    def change_turn(self):
+        if self.turn == 'B':
+            self.turn = 'R'
+        else: 
+            self.turn = 'B'
             
-def play_with_bot():
+def play(mood: int):
     a = Ludo()
     bot = Bot(a.board)
     while True:
@@ -160,8 +160,14 @@ def play_with_bot():
         a.get_valid_moves()
         print(a.moves)
         if a.moves:
-            print('Blue\'s turn')
-            i = int(input("choose your move: "))
+            print(a.turn + '\'s turn')
+            if a.turn == 'R':
+                if mood == 1:
+                    i = bot.choose_move(a.moves)
+                else:
+                    i = int (input())
+            else:
+                i = int (input())
             if (a.moves[i] == 'start'):
                 a.start()
             else:
@@ -171,96 +177,18 @@ def play_with_bot():
                 a.board.update_piece_position(a.ids[i].position, a.moves[i])
                 if a.check_arrive(a.moves[i]):
                     removed = a.arrive()
-                    a.board.update_piece_position((0,0), removed)
+                    if a.turn == 'B':
+                        a.board.update_piece_position((0,0), removed)
+                    else:
+                        a.board.update_piece_position((7,7), removed)
                     a.remove(removed)
                     if a.check_win():
                         break
                 else: a.ids[i].move(a.moves[i])
         a.moves =[]
         a.ids =[]
-        a.board.display()
-        a.turn = 'R'
-        print(a.roll())
-        a.get_valid_moves()
-        print(a.moves)
-        if a.moves:
-            print('Red\'s turn')
-            i = bot.choose_move(a.moves)
-            if (a.moves[i] == 'start'):
-                a.start()
-            else:
-                removed = a.board.get_piece_at(a.moves[i][0], a.moves[i][1])
-                a.board.update_piece_position(a.ids[i].position, a.moves[i])
-                if removed is not None:
-                    removed.move((-1 , -1))
-                if a.check_arrive(a.moves[i]):
-                    removed = a.arrive()
-                    a.board.update_piece_position((7,7), removed)
-                    a.remove(removed)
-                    if a.check_win():
-                        break
-                else: a.ids[i].position = a.moves[i]
-        
-        a.moves =[]
-        a.ids =[]
-        a.turn = 'B'
-    a.board.display()
-    print(a.winner + ' wins!')
-
-
-def play():
-    a = Ludo()
-    bot = Bot(a.board)
-    while True:
-        a.board.display()
-        print(a.roll())
-        a.get_valid_moves()
-        print(a.moves)
-        if a.moves:
-            print('Blue\'s turn')
-            i = int(input("choose your move: "))
-            if (a.moves[i] == 'start'):
-                a.start()
-            else:
-                removed = a.board.get_piece_at(a.moves[i][0], a.moves[i][1])
-                if removed is not None:
-                    removed.move((-1 , -1))
-                a.board.update_piece_position(a.ids[i].position, a.moves[i])
-                if a.check_arrive(a.moves[i]):
-                    removed = a.arrive()
-                    a.board.update_piece_position((0,0), removed)
-                    a.remove(removed)
-                    if a.check_win():
-                        break
-                else: a.ids[i].move(a.moves[i])
-        a.moves =[]
-        a.ids =[]
-        a.board.display()
-        a.turn = 'R'
-        print(a.roll())
-        a.get_valid_moves()
-        print(a.moves)
-        if a.moves:
-            print('Red\'s turn')
-            i = int(input("choose your move: "))
-            if (a.moves[i] == 'start'):
-                a.start()
-            else:
-                removed = a.board.get_piece_at(a.moves[i][0], a.moves[i][1])
-                a.board.update_piece_position(a.ids[i].position, a.moves[i])
-                if removed is not None:
-                    removed.move((-1 , -1))
-                if a.check_arrive(a.moves[i]):
-                    removed = a.arrive()
-                    a.board.update_piece_position((7,7), removed)
-                    a.remove(removed)
-                    if a.check_win():
-                        break
-                else: a.ids[i].position = a.moves[i]
-        
-        a.moves =[]
-        a.ids =[]
-        a.turn = 'B'
+        a.change_turn()
+       
     a.board.display()
     print(a.winner + ' wins!')
 
@@ -268,9 +196,6 @@ def play():
 
 if __name__ == "__main__":
     i = int(input("if you want to play with a friend write 0, else to play with our bot write 1: "))
-    if i == 1:
-        play_with_bot()
-    elif i == 0:
-        play()
+    play(i)
                 
 
