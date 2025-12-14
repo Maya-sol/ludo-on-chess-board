@@ -127,7 +127,6 @@ if __name__ == "__main__":
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-        print(game.moves)
         
         if game.moves:
             gui.draw_moves()
@@ -140,7 +139,6 @@ if __name__ == "__main__":
                     elif event.type == pygame.MOUSEBUTTONDOWN:
                         if event.button == 1:
                             i = gui.handle_click(event.pos)
-                            print(event.pos)
                 if not running:
                     break
             if not running:
