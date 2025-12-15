@@ -51,9 +51,9 @@ class GUI:
                     y = i* SQUARE_SIZE + SQUARE_SIZE // 2
     
                     if grid[i][j] == 'B':
-                        color = (0, 0, 255)
+                        color = BLUE
                     else:  
-                        color = (255, 0, 0)
+                        color = RED
 
                     pygame.draw.circle(self.screen, color, (x, y), 30)
                     pygame.draw.circle(self.screen, BLACK, (x, y), 30, 2)
@@ -76,7 +76,7 @@ class GUI:
                 row, col = i
                 x = col * SQUARE_SIZE + SQUARE_SIZE // 2
                 y = row * SQUARE_SIZE + SQUARE_SIZE // 2 
-                color = (255, 255, 255)
+                color = WHITE
     
                 pygame.draw.circle(self.screen, color, (x, y), 10)
 
@@ -87,7 +87,7 @@ class GUI:
     def handle_click(self, pos):
         if ((HEIGHT + WIDTH) // 2 - SQUARE_SIZE//2 <=pos[0]<= (HEIGHT + WIDTH) // 2 + SQUARE_SIZE//2) and (WIDTH // 2 + SQUARE_SIZE <= pos[1] <= WIDTH // 2 + SQUARE_SIZE*1.5):
             self.start()
-            return (-1,-1)
+            return -1
         x = pos[1]// SQUARE_SIZE
         y = pos[0] // SQUARE_SIZE
 
@@ -97,17 +97,34 @@ class GUI:
                 return i
     
     def show_winner(self):
-        if self.game.winner == 'R':
-            text = 'Blue Wins!'
-        else: 
-            text = 'Red Wins!'
         font = pygame.font.Font(None, 100)
-        text_surface = font.render(text, True, WHITE)
+        text_surface = font.render(self.game.winner + " Wins!", True, WHITE)
         text_rect = text_surface.get_rect()
         text_rect.center = (WIDTH // 2, WIDTH // 2)
         background_rect = pygame.Rect(0, WIDTH//2 - SQUARE_SIZE, WIDTH, 2*SQUARE_SIZE)
         pygame.draw.rect(self.screen, (30,30,30), background_rect)
         self.screen.blit(text_surface, text_rect)
+
+    def show_choose_mood(self):
+        self.screen.fill(BROWN)
+        cell_rect = pygame.Rect( HEIGHT//2 - SQUARE_SIZE*2, WIDTH//2 - SQUARE_SIZE*2, SQUARE_SIZE*4, SQUARE_SIZE*4)
+        pygame.draw.rect(self.screen, SIDE, cell_rect)
+        pygame.draw.rect(self.screen, WHITE, cell_rect,1)
+        pygame.draw.line(self.screen, WHITE, (HEIGHT//2 - SQUARE_SIZE*2, WIDTH//2), (HEIGHT//2 + SQUARE_SIZE*2 -1,WIDTH//2), 1)
+        font = pygame.font.Font(None, 70)
+        text_surface = font.render("VS. BOT", True, WHITE)
+        self.screen.blit(text_surface, text_surface.get_rect(center=(HEIGHT//2, WIDTH//2 - SQUARE_SIZE)))
+        text_surface = font.render("VS. Friend", True, WHITE)
+        self.screen.blit(text_surface, text_surface.get_rect(center=(HEIGHT//2, WIDTH//2 + SQUARE_SIZE)))
+
+    def choose_mood(self, pos):
+        if HEIGHT//2 - SQUARE_SIZE*2 <= pos[0] <=  HEIGHT//2 + SQUARE_SIZE*2 :
+            if WIDTH//2 - 2*SQUARE_SIZE <= pos[1] <= WIDTH//2:
+                return 0
+            elif  WIDTH//2 <= pos[1] <= WIDTH//2 + 2*SQUARE_SIZE:
+                return 1
+            return
+
 
 
 
@@ -115,10 +132,24 @@ class GUI:
 if __name__ == "__main__":
     pygame.init()
     gui = GUI()
-    mood = 1
     game = gui.game
-    bot = Bot(game.board)
+    mood = None
     running = True
+    while mood is None and running:
+        gui.show_choose_mood()
+        pygame.display.update()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                break
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    mood = gui.choose_mood(event.pos)
+                    
+    if mood is not None:
+        running = True
+        if mood == 0:
+            bot = Bot(game.board)
     while running:
         i = None
         gui.draw_board()
@@ -131,6 +162,12 @@ if __name__ == "__main__":
         if game.moves:
             gui.draw_moves()
             pygame.display.update()
+            if (mood == 0 and game.turn == 'B'):
+                pygame.time.delay(600)
+                i = bot.choose_move(game.moves)
+                if game.moves[i] == 'start':
+                    gui.start()
+                    i = -1
             while i is None:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
@@ -143,7 +180,7 @@ if __name__ == "__main__":
                     break
             if not running:
                 break
-            if i != (-1,-1):
+            if i != -1:
                 removed = game.board.get_piece_at(game.moves[i][0], game.moves[i][1])
                 if removed is not None:
                     removed.move((-1 , -1))
