@@ -167,7 +167,7 @@ def play(mood: int):
                 else:
                     i = int (input())
             else:
-                i = int (input())
+                i =  bot.choose_move(a.moves)
             if (a.moves[i] == 'start'):
                 a.start()
             else:
@@ -195,7 +195,7 @@ def play(mood: int):
 
 
 if __name__ == "__main__":
-    i = int(input("if you want to play with a friend write 0, else to play with our bot write 1: "))
+    i = 1 #int(input("if you want to play with a friend write 0, else to play with our bot write 1: "))
     play(i)
                 
 
